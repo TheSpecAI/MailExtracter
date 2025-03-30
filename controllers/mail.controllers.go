@@ -54,11 +54,12 @@ func GetAllMails(ctx *gin.Context) {
 	}
 	if token.Expiry.Before(time.Now()) {
 		fmt.Println("Access token expired. Refreshing...")
-		token, err = helpers.RefreshAccessToken()
+		token, err = helpers.RefreshAccessToken(config.OauthConfig)
 		if err != nil {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Failed to refresh token. Please re-authenticate."})
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			return
 		}
+		fmt.Println("Access Token Refreshed!")
 	}
 	client := config.OauthConfig.Client(context.Background(), token)
 	srv, err := gmail.NewService(context.Background(), option.WithHTTPClient(client))

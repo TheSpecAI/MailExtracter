@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"www.github.com/NirajSalunke/server/config"
+	"www.github.com/NirajSalunke/server/helpers"
 	"www.github.com/NirajSalunke/server/routes"
 )
 
@@ -33,9 +34,10 @@ func main() {
 }
 
 func hitter() {
-	url := os.Getenv("BACKEND_URL") + "mail"
+	url := os.Getenv("BACKEND_URL") + "mail/"
+	// fmt.Println(url)
 	client := &http.Client{}
-
+	helpers.PrintGreen("Mail Retrieving Automated")
 	for {
 		fmt.Println("Waiting for response...")
 		startTime := time.Now()

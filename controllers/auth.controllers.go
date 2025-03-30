@@ -23,7 +23,7 @@ func loadToken(file string) (*oauth2.Token, error) {
 }
 
 func HandleLogin(ctx *gin.Context) {
-	authURL := config.OauthConfig.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+	authURL := config.OauthConfig.AuthCodeURL("state-token", oauth2.AccessTypeOffline, oauth2.ApprovalForce)
 	ctx.Redirect(http.StatusFound, authURL)
 }
 

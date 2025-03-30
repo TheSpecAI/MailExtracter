@@ -7,18 +7,9 @@ import (
 	"os"
 
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 )
 
-func RefreshAccessToken() (*oauth2.Token, error) {
-
-	config := &oauth2.Config{
-		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
-		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-		Endpoint:     google.Endpoint,
-		RedirectURL:  "http://localhost:4001/callback",
-		Scopes:       []string{"https://www.googleapis.com/auth/gmail.readonly"},
-	}
+func RefreshAccessToken(config *oauth2.Config) (*oauth2.Token, error) {
 
 	token, err := loadToken("token.json")
 	if err != nil {
