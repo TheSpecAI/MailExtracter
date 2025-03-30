@@ -1,3 +1,4 @@
 tmp
 credentials.json
 token.json
+.env
