@@ -18,6 +18,47 @@ import (
 
 var IsNewMailInData bool
 
+func getAttachments(srv *gmail.Service, user, msgID string, parts []*gmail.MessagePart) []gin.H {
+	var attachments []gin.H
+	for _, part := range parts {
+		if part.Filename != "" && part.Body != nil && part.Body.AttachmentId != "" {
+			// Fetch the attachment
+			attachment, err := srv.Users.Messages.Attachments.Get(user, msgID, part.Body.AttachmentId).Do()
+			if err != nil {
+				fmt.Printf("Error retrieving attachment %s: %v\n", part.Filename, err)
+				continue
+			}
+
+			// Decode the base64 attachment data
+			data, err := base64.URLEncoding.DecodeString(attachment.Data)
+			if err != nil {
+				fmt.Printf("Error decoding attachment %s: %v\n", part.Filename, err)
+				continue
+			}
+
+			// Store the attachment data (for example, save to a file)
+			filePath := fmt.Sprintf("data/%s", part.Filename)
+			err = os.WriteFile(filePath, data, 0644)
+			if err != nil {
+				fmt.Printf("Error saving attachment %s: %v\n", part.Filename, err)
+				continue
+			}
+
+			// Append attachment metadata
+			attachments = append(attachments, gin.H{
+				"filename": part.Filename,
+				"size":     len(data),
+				"path":     filePath,
+			})
+		}
+
+		// If this part has sub-parts (e.g., in multipart emails), recurse
+		if part.Parts != nil {
+			attachments = append(attachments, getAttachments(srv, user, msgID, part.Parts)...)
+		}
+	}
+	return attachments
+}
 func getHeader(headers []*gmail.MessagePartHeader, name string) string {
 	for _, h := range headers {
 		if h.Name == name {
@@ -99,14 +140,16 @@ func GetAllMails(ctx *gin.Context) {
 		subject := getHeader(message.Payload.Headers, "Subject")
 		date := getHeader(message.Payload.Headers, "Date")
 		body := getMessageBody(message.Payload.Parts)
+		attachments := getAttachments(srv, user, msg.Id, message.Payload.Parts)
 
 		config.Emails = append(config.Emails, gin.H{
-			"id":      msg.Id,
-			"from":    from,
-			"to":      to,
-			"subject": subject,
-			"date":    date,
-			"body":    body,
+			"id":          msg.Id,
+			"from":        from,
+			"to":          to,
+			"subject":     subject,
+			"date":        date,
+			"body":        body,
+			"attachments": attachments,
 		})
 		existingEmailIDs[msg.Id] = true
 		IsNewMailInData = true
